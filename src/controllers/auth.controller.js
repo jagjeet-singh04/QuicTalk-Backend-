@@ -84,7 +84,6 @@ export const logout = (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 export const updateProfile = async (req, res) => {
   try {
     const { profilePic } = req.body;
@@ -94,10 +93,18 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Profile pic is required" });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    // Check if it's a base64 image or URL
+    let imageUrl = profilePic;
+    if (profilePic.startsWith('data:image')) {
+      const uploadResponse = await cloudinary.uploader.upload(profilePic, {
+        folder: "profile_pics"
+      });
+      imageUrl = uploadResponse.secure_url;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profilePic: uploadResponse.secure_url },
+      { profilePic: imageUrl },
       { new: true }
     );
 

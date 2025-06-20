@@ -7,15 +7,27 @@ const server = http.createServer(app);
 
 // Allowed origins for Socket.IO
 // In lib/socket.js
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://quick-talk-ten.vercel.app",
-  "https://quic-talk-backend.vercel.app"
-];
-
+// Remove the allowedOrigins array and replace with:
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow all origins in development
+      if (process.env.NODE_ENV === "development") {
+        return callback(null, true);
+      }
+      
+      // Allow specific origins in production
+      const allowedOrigins = [
+        "https://quick-talk-ten.vercel.app",
+        "https://quic-talk-backend.vercel.app"
+      ];
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true
   }

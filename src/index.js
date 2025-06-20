@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from 'url';
-
+import favicon from 'serve-favicon';
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
@@ -41,13 +41,33 @@ app.use(
   })
 );
 
+// Add this after CORS middleware
+if (process.env.NODE_ENV === "production") {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(
+        `https://${req.headers.host}${req.url}`
+      );
+    }
+    next();
+  });
+}
+
 // API routes
+app.use(favicon(path.join(__dirname, 'public', 'favicon-icon.ico')));
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
 // Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK" });
+// Add this after your routes
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
+  });
 });
 
 // Production configuration
