@@ -89,6 +89,14 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('*', (req, res) => {
+  res.status(404).json({ 
+    status: 'error',
+    message: 'Endpoint not found',
+    path: req.path
+  });
+});
+
 // Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
