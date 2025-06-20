@@ -1,13 +1,6 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
+// Add at the VERY TOP
+import '../preload-mongoose.js';
 
-// Preload all critical Mongoose modules
-require('mongoose/lib/connectionstate');
-require('mongoose/lib/drivers/node-mongodb-native/collection');
-require('mongoose/lib/drivers/node-mongodb-native/index');
-require('mongoose/lib/helpers/printJestWarning');
-require('mongoose/lib/helpers/getConstructorName');
-require('mongoose/lib/helpers/specialProperties');
 
 import express from 'express';
 import dotenv from "dotenv";
@@ -97,6 +90,29 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   });
+});
+
+
+// Add after other routes
+app.get('/test-modules', (req, res) => {
+  try {
+    // Test if modules are loaded
+    const mongoosePath = require.resolve('mongoose');
+    const connectionStatePath = require.resolve('mongoose/lib/connectionstate');
+    
+    res.status(200).json({
+      status: 'success',
+      modules: {
+        mongoose: mongoosePath,
+        connectionstate: connectionStatePath
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: `Module missing: ${error.message}`
+    });
+  }
 });
 
 // Start server

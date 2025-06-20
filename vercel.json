@@ -6,13 +6,8 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "node_modules/mongoose/lib/connectionstate.js",
-          "node_modules/mongoose/lib/drivers/node-mongodb-native/collection.js",
-          "node_modules/mongoose/lib/drivers/node-mongodb-native/index.js",
-          "node_modules/mongoose/lib/helpers/printJestWarning.js",
-          "node_modules/mongoose/lib/helpers/getConstructorName.js",
-          "node_modules/mongoose/lib/helpers/specialProperties.js",
-          "src/public/**"
+          "node_modules/mongoose/lib/**/*.js",
+          "src/preload-mongoose.js"
         ]
       }
     }
