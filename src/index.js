@@ -1,7 +1,10 @@
+// FIX FOR EXPRESS ROUTER ISSUE
 import express from "express";
-const router = express.Router();
-// This line fixes the missing './router' module error
+import { Router } from 'express';
+
+const router = Router();
 express.application.router = router;
+express.Router = () => router;
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
