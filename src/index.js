@@ -1,13 +1,22 @@
-// PRELOAD MODULES FOR SERVERLESS ENVIRONMENT
+// PRELOAD ALL CRITICAL MODULES
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-// Preload critical modules for Express compatibility
+// Preload debug and its internal modules
+require('debug');
+require('debug/src/common');
+require('debug/src/node');
+require('debug/src/browser');
+
+// Preload Mongoose dependencies
+require('mongoose/lib/drivers/node-mongodb-native/collection');
+require('mongoose/lib/drivers/node-mongodb-native/index');
+
+// Preload other critical modules
 require('iconv-lite');
 require('iconv-lite/extend-node');
 require('raw-body');
 require('body-parser');
-require('debug');
 
 // WORKAROUND FOR EXPRESS ROUTER ISSUE
 import express from 'express';
@@ -36,6 +45,10 @@ import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
+
+// Explicitly import Mongoose to ensure it's initialized
+import mongoose from 'mongoose';
+console.log('Mongoose version:', mongoose.version);
 
 dotenv.config();
 
@@ -86,11 +99,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Favicon route
 app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
 });
 
 app.get('/favicon.png', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
 });
 
 // API routes
