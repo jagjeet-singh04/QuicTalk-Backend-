@@ -6,14 +6,15 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "ssl-renew": "node ssl-renew.js"
+    "ssl-renew": "node ssl-renew.js",
+    "vercel-build": "node src/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "body-parser": "^1.20.2",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -22,9 +23,11 @@
     "express": "4.18.2",
     "iconv-lite": "^0.6.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.0",
+    "mongoose": "^7.8.0",
+    "mquery": "^5.0.0",
+    "ms": "^2.1.3",
     "path-to-regexp": "^8.2.0",
-    "raw-body": "^3.0.0",
+    "raw-body": "^2.5.2",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

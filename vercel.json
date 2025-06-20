@@ -9,10 +9,11 @@
           "node_modules/debug/**",
           "node_modules/ms/**",
           "node_modules/mongoose/**",
-          "node_modules/mongodb/**",
+          "node_modules/mquery/**",
           "node_modules/iconv-lite/**",
           "node_modules/raw-body/**",
-          "node_modules/body-parser/**"
+          "node_modules/body-parser/**",
+          "src/public/**"
         ]
       }
     }

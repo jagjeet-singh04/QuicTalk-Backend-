@@ -1,14 +1,16 @@
-// PRELOAD ALL CRITICAL MODULES
+// ULTIMATE MODULE PRELOAD SOLUTION
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
 // Preload debug and its internal modules
-require('debug');
+const debugPath = require.resolve('debug');
+require(debugPath);
 require('debug/src/common');
 require('debug/src/node');
 require('debug/src/browser');
 
 // Preload Mongoose dependencies
+require('mongoose');
 require('mongoose/lib/drivers/node-mongodb-native/collection');
 require('mongoose/lib/drivers/node-mongodb-native/index');
 
@@ -17,6 +19,8 @@ require('iconv-lite');
 require('iconv-lite/extend-node');
 require('raw-body');
 require('body-parser');
+require('mquery');
+require('ms');
 
 // WORKAROUND FOR EXPRESS ROUTER ISSUE
 import express from 'express';
@@ -46,9 +50,10 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
 
-// Explicitly import Mongoose to ensure it's initialized
+// Force Mongoose initialization
 import mongoose from 'mongoose';
-console.log('Mongoose version:', mongoose.version);
+mongoose.set('debug', false); // Disable Mongoose debug to prevent issues
+console.log('Mongoose initialized, version:', mongoose.version);
 
 dotenv.config();
 
@@ -129,16 +134,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Production configuration for frontend
-if (process.env.NODE_ENV === "production") {
-  const staticPath = path.join(__dirname, '../frontend/dist');
-  console.log('[PRODUCTION] Serving static files from:', staticPath);
-  app.use(express.static(staticPath));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(staticPath, 'index.html'));
-  });
-}
-
 // Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
@@ -150,7 +145,7 @@ server.listen(PORT, () => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('⚠️ Server Error:', err.stack);
+  console.error('⚠️ Server Error:', err.message);
   
   // Handle CORS errors specifically
   if (err.message.includes("CORS")) {
