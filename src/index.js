@@ -99,11 +99,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Favicon route
 app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
+  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
 });
 
 app.get('/favicon.png', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
+  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
 });
 
 // API routes
