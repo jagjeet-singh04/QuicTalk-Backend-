@@ -10,11 +10,12 @@ import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Fixed all routes to use proper HTTP methods
+// Fixed routes with proper paths
+// Verify all routes look like this:
 router.post('/signup', signup);
 router.post('/login', login);
 router.post('/logout', logout);
 router.put("/update-profile", protectRoute, updateProfile);
-router.get('/check', protectRoute, checkAuth);
+router.get('/check-auth', protectRoute, checkAuth); // Changed from /check
 
 export default router;

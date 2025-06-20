@@ -17,8 +17,8 @@ export const getUsersForSidebar = async (req, res) => {
 };
 
 export const getMessages = async (req, res) => {
-  try {
-    const { id: userToChatId } = req.params;
+   try {
+    const { userId: userToChatId } = req.params; // Destructure as userToChatId
     const myId = req.user._id;
 
     const messages = await Message.find({
@@ -27,7 +27,6 @@ export const getMessages = async (req, res) => {
         { senderId: userToChatId, receiverId: myId },
       ],
     });
-
     res.status(200).json(messages);
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);

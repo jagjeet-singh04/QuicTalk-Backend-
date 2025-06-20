@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from 'url';
-import favicon from 'serve-favicon';
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
@@ -41,31 +40,41 @@ app.use(
   })
 );
 
-// Add this after CORS middleware
+// HTTPS redirection in production
 if (process.env.NODE_ENV === "production") {
   app.use((req, res, next) => {
     if (req.headers['x-forwarded-proto'] !== 'https') {
-      return res.redirect(
-        `https://${req.headers.host}${req.url}`
-      );
+      return res.redirect(`https://${req.headers.host}${req.url}`);
     }
     next();
   });
 }
 
-// API routes
-app.use(favicon(path.join(__dirname, 'public', 'favicon-icon.ico')));
-app.use("/api/auth", authRoutes);
-app.use("/api/messages", messageRoutes);
+// Serve static files (including favicon)
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Health check endpoint
-// Add this after your routes
-// Add this before your API routes
+// Favicon route
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
 });
 
-app.get('/health', (req, res) => {
+// API routes
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
+
+// Explicitly define root route
+app.get('/', (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'Backend server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -73,16 +82,12 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Production configuration
+// Production configuration for frontend
 if (process.env.NODE_ENV === "production") {
-  const staticPath = path.join(__dirname, "../frontend/dist");
-  
-  // Serve static files
+  const staticPath = path.join(__dirname, '../frontend/dist');
   app.use(express.static(staticPath));
-  
-  // Handle client-side routing
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(staticPath, 'index.html'));
   });
 }
 
@@ -97,8 +102,12 @@ server.listen(PORT, () => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
+  console.error('⚠️ Server Error:', err.stack);
+  res.status(500).json({
+    status: 'error',
+    message: 'Internal Server Error',
+    errorId: Date.now()
+  });
 });
 
-export default app; // For Vercel serverless
+export default app;
