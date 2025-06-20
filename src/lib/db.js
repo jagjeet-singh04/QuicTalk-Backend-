@@ -1,7 +1,8 @@
-import mongoose from "mongoose" 
+import mongoose from 'mongoose';
 
 export const connectDB = async () => {
   try {
+    // Skip in Vercel build environment
     if (process.env.VERCEL) {
       console.log('Skipping DB connection in Vercel build environment');
       return;

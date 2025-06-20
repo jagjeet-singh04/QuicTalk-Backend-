@@ -1,51 +1,5 @@
-// Add this at the very top
-if (process.env.VERCEL_ENV === 'preview' || process.env.VERCEL_ENV === 'development') {
-  console.log('Skipping server start in Vercel build environment');
-  process.exit(0);
-}
-
-// ULTIMATE MODULE PRELOAD SOLUTION
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
-// Preload debug and its internal modules
-const debugPath = require.resolve('debug');
-require(debugPath);
-require('debug/src/common');
-require('debug/src/node');
-require('debug/src/browser');
-
-// Preload Mongoose dependencies
-require('mongoose');
-require('mongoose/lib/drivers/node-mongodb-native/collection');
-require('mongoose/lib/drivers/node-mongodb-native/index');
-
-// Preload other critical modules
-require('iconv-lite');
-require('iconv-lite/extend-node');
-require('raw-body');
-require('body-parser');
-require('mquery');
-require('ms');
-
-// WORKAROUND FOR EXPRESS ROUTER ISSUE
 import express from 'express';
 import { Router } from 'express';
-
-// Create router instance
-const router = Router();
-
-// Patch Express application
-express.application.router = router;
-express.Router = () => router;
-
-// Override lazy loading
-express.application.lazyrouter = function() {
-  if (!this._router) this._router = router;
-  return this;
-};
-
-// Import other modules
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -55,11 +9,6 @@ import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
-
-// Force Mongoose initialization
-import mongoose from 'mongoose';
-mongoose.set('debug', false); // Disable Mongoose debug to prevent issues
-console.log('Mongoose initialized, version:', mongoose.version);
 
 dotenv.config();
 
