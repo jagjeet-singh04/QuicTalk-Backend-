@@ -5,10 +5,18 @@ import express from "express";
 const app = express();
 const server = http.createServer(app);
 
+// Allowed origins for Socket.IO
+const allowedOrigins = [
+  "http://localhost:5173", // Local development
+  "https://quick-talk-ten.vercel.app" // Production frontend
+];
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"],
-  },
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true // Important for authentication cookies
+  }
 });
 
 export function getReceiverSocketId(userId) {
@@ -29,8 +37,10 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("A user disconnected", socket.id);
-    delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    if (userId) {
+      delete userSocketMap[userId];
+      io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    }
   });
 });
 
