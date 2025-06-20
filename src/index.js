@@ -16,29 +16,32 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configure allowed origins
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://quick-talk-ten.vercel.app"
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : [];
+
+// CORS configuration
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// CORS middleware
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
 
 // HTTPS redirection in production
 if (process.env.NODE_ENV === "production") {
@@ -72,7 +75,6 @@ app.get('/', (req, res) => {
   });
 });
 
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -103,6 +105,15 @@ server.listen(PORT, () => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('⚠️ Server Error:', err.stack);
+  
+  // Handle CORS errors specifically
+  if (err.message.includes("CORS")) {
+    return res.status(403).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+  
   res.status(500).json({
     status: 'error',
     message: 'Internal Server Error',

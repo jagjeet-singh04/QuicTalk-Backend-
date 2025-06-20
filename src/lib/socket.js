@@ -5,9 +5,11 @@ import express from "express";
 const app = express();
 const server = http.createServer(app);
 
-// Allowed origins for Socket.IO
-// In lib/socket.js
-// Remove the allowedOrigins array and replace with:
+// Get allowed origins from environment variable
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : [];
+
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
@@ -17,11 +19,6 @@ const io = new Server(server, {
       }
       
       // Allow specific origins in production
-      const allowedOrigins = [
-        "https://quick-talk-ten.vercel.app",
-        "https://quic-talk-backend.vercel.app"
-      ];
-      
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -32,7 +29,6 @@ const io = new Server(server, {
     credentials: true
   }
 });
-
 
 export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
