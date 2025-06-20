@@ -15,4 +15,5 @@ COPY . .
 EXPOSE 3000
 
 # Start command
-CMD ["node", "index.js"]
+# Change this line
+CMD ["node", "src/index.js"]

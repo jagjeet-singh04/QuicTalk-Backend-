@@ -4,7 +4,15 @@ const collectionName = "users";
 
 import { ObjectId } from 'mongodb';
 
+
+
+
 export const User = {
+
+  async findOne(query) {
+    const db = getDB();
+    return db.collection(collectionName).findOne(query);
+  },  
   async findById(id) {
     const db = getDB();
     return db.collection("users").findOne({ 

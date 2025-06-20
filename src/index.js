@@ -25,7 +25,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://localhost:3000"
     ];
 
-// CORS configuration
+console.log("Allowed Origins:", allowedOrigins);
+
+// Enhanced CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -40,7 +42,8 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  exposedHeaders: ["Content-Length", "X-Request-Id"]
 };
 
 // Apply middleware in correct order
@@ -48,8 +51,8 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// Handle preflight requests
-app.options("*", cors(corsOptions));
+// Explicitly handle preflight requests
+app.options('*', cors(corsOptions));
 
 // HTTPS redirection in production
 if (process.env.NODE_ENV === "production") {
@@ -67,8 +70,12 @@ if (process.env.NODE_ENV === "production") {
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Health check endpoint - should be above the catch-all route
+// Health check endpoint
 app.get('/api/health', (req, res) => {
+  // Add CORS headers manually for this endpoint
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
   res.status(200).json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -78,6 +85,9 @@ app.get('/api/health', (req, res) => {
 
 // Explicit root route
 app.get('/', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
   res.json({
     status: 'success',
     message: 'Backend server is running',
@@ -86,8 +96,11 @@ app.get('/', (req, res) => {
   });
 });
 
-// 404 handler - should be the last route
+// 404 handler
 app.get('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
   res.status(404).json({ 
     status: 'error',
     message: 'Endpoint not found',
@@ -97,6 +110,10 @@ app.get('*', (req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
+  // Add CORS headers to error responses
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
   console.error('⚠️ Server Error:', err.message);
   
   // Handle CORS errors specifically

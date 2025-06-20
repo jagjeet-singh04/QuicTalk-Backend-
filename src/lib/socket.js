@@ -13,12 +13,38 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://localhost:5173",
       "http://localhost:3000",
       "https://quick-talk-ten.vercel.app",
-      "https://quic-talk-backend.vercel.app"
+      "https://quictalk-backend-production.up.railway.app"
     ];
+
+// Add this pattern matching function
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // Allow no-origin requests
+  
+  // Allow all in development
+  if (process.env.NODE_ENV === "development") return true;
+  
+  // Check exact matches
+  if (allowedOrigins.includes(origin)) return true;
+  
+  // Allow all Vercel preview deployments
+  if (origin.endsWith('.vercel.app')) return true;
+  
+  // Allow localhost with any port
+  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  
+  return false;
+};
 
 // Apply CORS middleware to Express app
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ Express CORS blocked: ${origin}`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
@@ -27,13 +53,7 @@ app.use(cors({
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // Allow non-browser connections
-      
-      if (process.env.NODE_ENV === "development") {
-        return callback(null, true); // Allow all in development
-      }
-      
-      if (allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
         console.warn(`⚠️ Socket.IO CORS blocked: ${origin}`);
