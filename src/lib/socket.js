@@ -6,7 +6,7 @@ import cors from "cors";
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Allowed origins
+// ✅ Allowed Origins (Set via ENV or fallback to localhost + vercel)
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
   : [
@@ -16,7 +16,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "https://quictalk-backend-production.up.railway.app"
     ];
 
-// ✅ Origin validator
+// ✅ Origin Validator Function
 const isOriginAllowed = (origin) => {
   if (!origin) return true;
   if (process.env.NODE_ENV === "development") return true;
@@ -26,7 +26,7 @@ const isOriginAllowed = (origin) => {
   return false;
 };
 
-// ✅ CORS for Express
+// ✅ CORS Middleware for Express
 app.use(cors({
   origin: (origin, callback) => {
     if (isOriginAllowed(origin)) {
@@ -40,7 +40,15 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
 
-// ✅ Initialize Socket.IO
+// ✅ Track online users
+const userSocketMap = {}; // { userId: socketId }
+
+// ✅ Export receiver socket ID (used in chat sending logic)
+export function getReceiverSocketId(userId) {
+  return userSocketMap[userId];
+}
+
+// ✅ Initialize Socket.IO with advanced config
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
@@ -55,50 +63,53 @@ const io = new Server(server, {
     credentials: true
   },
   connectionStateRecovery: {
-    maxDisconnectionDuration: 2 * 60 * 1000,
+    maxDisconnectionDuration: 5 * 60 * 1000, // 5 mins
     skipMiddlewares: true
-  }
+  },
+  pingTimeout: 60000, // disconnect if no pong after 60s
+  pingInterval: 25000, // ping every 25s
+  transports: ["websocket"] // force websocket only
 });
 
-// 🔍 Track online users
-const userSocketMap = {}; // { userId: socketId }
-
-export function getReceiverSocketId(userId) {
-  return userSocketMap[userId];
-}
-
-// 🔄 Connection logic
+// 🔌 Handle connection logic
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
 
-  console.log("🟢 New connection:", socket.id);
-  console.log(`📊 Active connections: ${io.engine.clientsCount}`);
+  console.log("🟢 New connection:", socket.id, "User ID:", userId);
+  console.log(`📊 Active clients: ${io.engine.clientsCount}`);
 
+  // ✅ Add user to online map
   if (userId && typeof userId === "string") {
     userSocketMap[userId] = socket.id;
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   }
 
-  // ❌ Handle disconnect
-  socket.on("disconnect", () => {
-    console.log("🔴 Disconnected:", socket.id);
+  // 💓 Custom ping-pong event (optional)
+  socket.on("ping", (cb) => {
+    console.log("📶 Ping received from", socket.id);
+    if (typeof cb === "function") cb(); // send pong
+  });
+
+  // ❌ Disconnection
+  socket.on("disconnect", (reason) => {
+    console.log("🔴 Disconnected:", socket.id, "Reason:", reason);
     if (userId && typeof userId === "string") {
       delete userSocketMap[userId];
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
     }
-    console.log(`📉 Active connections after disconnect: ${io.engine.clientsCount}`);
+    console.log(`📉 Remaining clients: ${io.engine.clientsCount}`);
   });
 
-  // ⚠️ Socket-level error handling
+  // ⚠️ Socket-level errors
   socket.on("error", (err) => {
-    console.error("❗Socket error:", err.message || err);
+    console.error("❗ Socket error:", err.message || err);
   });
 });
 
-// 🔁 Raw connection for deep engine tracking
+// 🔁 Low-level engine connection
 io.engine.on("connection", (rawSocket) => {
   rawSocket.on("close", (reason) => {
-    console.log("⚡ Engine closed connection:", reason);
+    console.log("⚡ Engine closed socket due to:", reason);
   });
 });
 

@@ -17,7 +17,8 @@ export const getUsersForSidebar = async (req, res) => {
     console.error("Error in getUsersForSidebar: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
-};export const getMessages = async (req, res) => {
+};
+export const getMessages = async (req, res) => {
   try {
     const { userId: userToChatId } = req.params;
     const myId = req.user._id;
@@ -56,9 +57,9 @@ export const sendMessage = async (req, res) => {
       imageUrl = uploadResponse.secure_url;
     }
 
-    const newMessage = {
-      senderId,
-      receiverId,
+   const newMessage = {
+      senderId: new ObjectId(senderId),
+      receiverId: new ObjectId(receiverId),
       text,
       image: imageUrl,
       createdAt: new Date()
@@ -66,14 +67,23 @@ export const sendMessage = async (req, res) => {
 
     const createdMessage = await Message.create(newMessage);
 
+    // Convert to plain object for Socket.IO
+    const messageObj = {
+      ...createdMessage,
+      _id: createdMessage._id.toString(),
+      senderId: createdMessage.senderId.toString(),
+      receiverId: createdMessage.receiverId.toString()
+    };
+
+    // Emit to receiver
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", createdMessage);
+      io.to(receiverSocketId).emit("newMessage", messageObj);
     }
 
-    res.status(201).json(createdMessage);
+    res.status(201).json(messageObj);
   } catch (error) {
-    console.log("Error in sendMessage controller: ", error.message);
+    console.error("Error in sendMessage controller: ", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
