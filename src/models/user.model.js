@@ -27,5 +27,16 @@ export const User = {
   async find(query, projection = {}) {
     const db = getDB();
     return db.collection(collectionName).find(query).project(projection).toArray();
+  },
+   async update(query, update) {
+    const db = getDB();
+    // Use updateOne instead of update
+    return db.collection(collectionName).updateOne(query, { $set: update });
+  },
+
+  async findById(id) {
+    const db = getDB();
+    // Convert string ID to ObjectId
+    return db.collection(collectionName).findOne({ _id: new ObjectId(id) });
   }
 };

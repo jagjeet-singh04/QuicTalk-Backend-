@@ -11,6 +11,12 @@ import { app, server } from "./lib/socket.js";
 
 dotenv.config();
 
+// In backend/src/index.js
+// const allowedOrigins = [
+//   "http://localhost:3000",
+//   "https://your-production-domain.com"
+// ];
+
 const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,14 +62,6 @@ if (process.env.NODE_ENV === "production") {
 // Serve static files (including favicon)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Favicon route
-app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
-});
-
-app.get('/favicon.png', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
-});
 
 // API routes
 app.use("/api/auth", authRoutes);

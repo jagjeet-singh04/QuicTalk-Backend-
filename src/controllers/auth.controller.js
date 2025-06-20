@@ -81,7 +81,7 @@ export const logout = (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
+// In backend/src/controllers/auth.controller.js
 export const updateProfile = async (req, res) => {
   try {
     const { profilePic } = req.body;
@@ -91,29 +91,22 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Profile pic is required" });
     }
 
-    // Check if it's a base64 image or URL
-    let imageUrl = profilePic;
-    if (profilePic.startsWith('data:image')) {
-      const uploadResponse = await cloudinary.uploader.upload(profilePic, {
-        folder: "profile_pics"
-      });
-      imageUrl = uploadResponse.secure_url;
-    }
+    const imageUrl = profilePic.startsWith('http') 
+      ? profilePic 
+      : (await cloudinary.uploader.upload(profilePic)).secure_url;
 
-    const updatedUser = await User.update(
+    await User.update(
       { _id: userId },
       { profilePic: imageUrl }
     );
 
-    // Fetch the updated user
     const user = await User.findById(userId);
     res.status(200).json(user);
   } catch (error) {
-    console.log("error in update profile:", error);
+    console.log("Update error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 export const checkAuth = (req, res) => {
   try {
     // Remove password from user object

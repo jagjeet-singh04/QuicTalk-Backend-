@@ -23,12 +23,13 @@ export const getMessages = async (req, res) => {
     const { userId: userToChatId } = req.params;
     const myId = req.user._id;
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: myId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: myId },
-      ],
-    });
+    // In getMessages controller
+const messages = await Message.find({
+  $or: [
+    { senderId: new ObjectId(myId), receiverId: new ObjectId(userToChatId) },
+    { senderId: new ObjectId(userToChatId), receiverId: new ObjectId(myId) }
+  ]
+});
 
     res.status(200).json(messages);
   } catch (error) {
