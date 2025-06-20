@@ -2,6 +2,7 @@ import { User } from "../models/user.model.js";
 import { Message } from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
+import { ObjectId } from "mongodb";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -17,26 +18,33 @@ export const getUsersForSidebar = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 export const getMessages = async (req, res) => {
-   try {
+  try {
     const { userId: userToChatId } = req.params;
     const myId = req.user._id;
 
-    // In getMessages controller
-const messages = await Message.find({
-  $or: [
-    { senderId: new ObjectId(myId), receiverId: new ObjectId(userToChatId) },
-    { senderId: new ObjectId(userToChatId), receiverId: new ObjectId(myId) }
-  ]
-});
+    // Validate IDs
+    if (!ObjectId.isValid(myId)) {
+      return res.status(400).json({ error: "Invalid sender ID" });
+    }
+    if (!ObjectId.isValid(userToChatId)) {
+      return res.status(400).json({ error: "Invalid receiver ID" });
+    }
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: new ObjectId(myId), receiverId: new ObjectId(userToChatId) },
+        { senderId: new ObjectId(userToChatId), receiverId: new ObjectId(myId) }
+      ]
+    }).sort({ createdAt: 1 });
 
     res.status(200).json(messages);
   } catch (error) {
-    console.log("Error in getMessages controller: ", error.message);
+    console.error("Error in getMessages controller: ", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 export const sendMessage = async (req, res) => {
   try {
