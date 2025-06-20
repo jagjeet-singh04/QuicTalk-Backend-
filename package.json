@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "type": "module",
-"scripts": {
-  "start": "node dist/index.js",
-  "dev": "nodemon src/index.js",
-  "build": "node build.js",
-  "vercel-build": "npm run build"
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.js",
+    "build": "node build.cjs",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -27,7 +27,7 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.3",
+    "@vercel/ncc": "^0.38.1",
     "nodemon": "^3.1.10"
   }
 }

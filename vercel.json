@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/favicon.ico",
-      "dest": "/dist/public/favicon.ico",
+      "dest": "dist/public/favicon.ico",
       "methods": ["GET"]
     },
     {
