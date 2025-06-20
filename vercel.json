@@ -2,27 +2,24 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "src": "src/index.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/favicon.ico",
-      "dest": "dist/public/favicon.ico",
+      "dest": "/src/public/favicon.ico",
       "methods": ["GET"]
     },
     {
       "src": "/api/(.*)",
-      "dest": "dist/index.js",
+      "dest": "src/index.js",
       "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     },
     {
       "src": "/(.*)",
-      "dest": "dist/index.js",
+      "dest": "src/index.js",
       "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     }
   ]
