@@ -6,8 +6,15 @@ import cloudinary from "../lib/cloudinary.js";
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
   try {
+    // Validate input
     if (!fullName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Check for existing email only
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
     }
 
     if (password.length < 6) {
@@ -39,7 +46,16 @@ export const signup = async (req, res) => {
       profilePic: createdUser.profilePic,
     });
   } catch (error) {
-    console.log("Error in signup controller", error.message);
+    console.error("Error in signup controller", error);
+    
+    // Handle duplicate key errors specifically
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        message: "Duplicate key error",
+        field: Object.keys(error.keyPattern)[0]
+      });
+    }
+    
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
