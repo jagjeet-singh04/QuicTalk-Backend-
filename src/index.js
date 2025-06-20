@@ -11,43 +11,48 @@ import { app, server } from "./lib/socket.js";
 
 dotenv.config();
 
-// In backend/src/index.js
-// const allowedOrigins = [
-//   "http://localhost:3000",
-//   "https://your-production-domain.com"
-// ];
+const allowedOrigins = [
+  "https://quick-talk-ten.vercel.app",
+  "https://quic-talk-backend.vercel.app",
+  "http://localhost:3000"
+];
+
 
 const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure allowed origins
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : [];
+// // Configure allowed origins
+// const allowedOrigins = process.env.ALLOWED_ORIGINS 
+//   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+//   : [];
 
 // CORS configuration
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`⚠️ CORS blocked: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 };
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
+// // Apply CORS middleware
+// app.use(cors(corsOptions));
 
 // Handle preflight requests
-app.options("*", cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // HTTPS redirection in production
 if (process.env.NODE_ENV === "production") {
