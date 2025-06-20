@@ -11,13 +11,6 @@ import { app, server } from "./lib/socket.js";
 
 dotenv.config();
 
-// const allowedOrigins = [
-//   "https://quick-talk-ten.vercel.app",
-//   "https://quic-talk-backend.vercel.app",
-//   "http://localhost:3000"
-// ];
-
-
 const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,13 +18,20 @@ const __dirname = path.dirname(__filename);
 // Configure allowed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : [];
+  : [
+      "https://quick-talk-ten.vercel.app",
+      "https://quic-talk-backend.vercel.app",
+      "http://localhost:5173",
+      "http://localhost:3000"
+    ];
 
 // CORS configuration
-
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.warn(`⚠️ CORS blocked: ${origin}`);
@@ -43,16 +43,13 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 };
 
+// Apply middleware in correct order
 app.use(cors(corsOptions));
-
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// // Apply CORS middleware
-// app.use(cors(corsOptions));
-
 // Handle preflight requests
-app.options('*', cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // HTTPS redirection in production
 if (process.env.NODE_ENV === "production") {
@@ -63,19 +60,23 @@ if (process.env.NODE_ENV === "production") {
     next();
   });
 } else {
-  // Disable HTTPS redirection in development
   console.log("⚠️ HTTPS redirection disabled in development");
 }
-
-// Serve static files (including favicon)
-app.use(express.static(path.join(__dirname, 'public')));
-
 
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Explicitly define root route
+// Health check endpoint - should be above the catch-all route
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
+  });
+});
+
+// Explicit root route
 app.get('/', (req, res) => {
   res.json({
     status: 'success',
@@ -85,29 +86,12 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
-  });
-});
-
+// 404 handler - should be the last route
 app.get('*', (req, res) => {
   res.status(404).json({ 
     status: 'error',
     message: 'Endpoint not found',
     path: req.path
-  });
-});
-
-// Start server
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  connectDB().catch(err => {
-    console.error("Database connection failed:", err);
-    process.exit(1);
   });
 });
 
@@ -119,7 +103,7 @@ app.use((err, req, res, next) => {
   if (err.message.includes("CORS")) {
     return res.status(403).json({
       status: 'error',
-      message: err.message
+      message: 'CORS policy blocked the request'
     });
   }
   
@@ -127,6 +111,16 @@ app.use((err, req, res, next) => {
     status: 'error',
     message: 'Internal Server Error',
     errorId: Date.now()
+  });
+});
+
+// Start server
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+  connectDB().catch(err => {
+    console.error("Database connection failed:", err);
+    process.exit(1);
   });
 });
 

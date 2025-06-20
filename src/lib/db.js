@@ -27,6 +27,8 @@ export const connectDB = async () => {
   }
 };
 
+// ... rest of the code
+
 // ... rest of the file
 
 export const getDB = () => {
