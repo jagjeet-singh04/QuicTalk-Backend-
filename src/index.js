@@ -1,10 +1,25 @@
-// FIX FOR EXPRESS ROUTER ISSUE
-import express from "express";
+// Force include debug module for Express
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+require('debug');
+
+// WORKAROUND FOR EXPRESS ROUTER ISSUE
+import express from 'express';
 import { Router } from 'express';
 
+// Create router instance
 const router = Router();
+
+// Patch Express application
 express.application.router = router;
 express.Router = () => router;
+
+// Override lazy loading
+express.application.lazyrouter = function() {
+  if (!this._router) this._router = router;
+  return this;
+};
+
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -14,7 +29,6 @@ import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
-
 
 dotenv.config();
 
@@ -65,12 +79,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Favicon route
 app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
+  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
 });
 
 app.get('/favicon.png', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
+  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
 });
+
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
@@ -97,6 +112,7 @@ app.get('/api/health', (req, res) => {
 // Production configuration for frontend
 if (process.env.NODE_ENV === "production") {
   const staticPath = path.join(__dirname, '../frontend/dist');
+  console.log('[PRODUCTION] Serving static files from:', staticPath);
   app.use(express.static(staticPath));
   app.get('*', (req, res) => {
     res.sendFile(path.join(staticPath, 'index.html'));
@@ -123,6 +139,7 @@ app.use((err, req, res, next) => {
       message: err.message
     });
   }
+  
   res.status(500).json({
     status: 'error',
     message: 'Internal Server Error',
