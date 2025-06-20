@@ -1,36 +1,31 @@
-import mongoose, { Schema } from "mongoose";
+import { getDB } from "../lib/db.js";
 
-const userSchema = new mongoose.Schema(
-    {
-        email:{
-            type:String , 
-            required: true , 
-            unique: true , 
-            trim: true ,
-            lowercase: true ,
-        }, 
-        fullName: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        match: /^[a-z0-9._]+$/, // Optional: enforce pattern in schema too
-        },
-        password:{
-            type:String , 
-            required: true , 
-            trim: true ,
-            minlength: 6 , 
-        },
-        profilePic:{
-            type:String , 
-            default: "" , 
-        },
-    }, 
-    {timestamps : true }
-)
+const collectionName = "users";
 
-const User = mongoose.model("User" , userSchema ) ; 
+export const User = {
+  async findOne(query) {
+    const db = getDB();
+    return db.collection(collectionName).findOne(query);
+  },
 
-export default User ; 
+  async create(userData) {
+    const db = getDB();
+    const result = await db.collection(collectionName).insertOne(userData);
+    return { ...userData, _id: result.insertedId };
+  },
+
+  async update(query, update) {
+    const db = getDB();
+    return db.collection(collectionName).updateOne(query, { $set: update });
+  },
+
+  async findById(id) {
+    const db = getDB();
+    return db.collection(collectionName).findOne({ _id: id });
+  },
+  
+  async find(query, projection = {}) {
+    const db = getDB();
+    return db.collection(collectionName).find(query).project(projection).toArray();
+  }
+};

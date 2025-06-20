@@ -1,13 +1,15 @@
-import User from "../models/user.model.js";
-import Message from "../models/message.model.js";
-
+import { User } from "../models/user.model.js";
+import { Message } from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
+    const filteredUsers = await User.find(
+      { _id: { $ne: loggedInUserId } }, 
+      { password: 0 } // Exclude password
+    );
 
     res.status(200).json(filteredUsers);
   } catch (error) {
@@ -18,7 +20,7 @@ export const getUsersForSidebar = async (req, res) => {
 
 export const getMessages = async (req, res) => {
    try {
-    const { userId: userToChatId } = req.params; // Destructure as userToChatId
+    const { userId: userToChatId } = req.params;
     const myId = req.user._id;
 
     const messages = await Message.find({
@@ -27,6 +29,7 @@ export const getMessages = async (req, res) => {
         { senderId: userToChatId, receiverId: myId },
       ],
     });
+
     res.status(200).json(messages);
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
@@ -42,26 +45,26 @@ export const sendMessage = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      // Upload base64 image to cloudinary
       const uploadResponse = await cloudinary.uploader.upload(image);
       imageUrl = uploadResponse.secure_url;
     }
 
-    const newMessage = new Message({
+    const newMessage = {
       senderId,
       receiverId,
       text,
       image: imageUrl,
-    });
+      createdAt: new Date()
+    };
 
-    await newMessage.save();
+    const createdMessage = await Message.create(newMessage);
 
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      io.to(receiverSocketId).emit("newMessage", createdMessage);
     }
 
-    res.status(201).json(newMessage);
+    res.status(201).json(createdMessage);
   } catch (error) {
     console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });

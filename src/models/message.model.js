@@ -1,27 +1,16 @@
-import mongoose from "mongoose";
+import { getDB } from "../lib/db.js";
 
-const messageSchema = new mongoose.Schema(
-  {
-    senderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    receiverId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    text: {
-      type: String,
-    },
-    image: {
-      type: String,
-    },
+const collectionName = "messages";
+
+export const Message = {
+  async create(messageData) {
+    const db = getDB();
+    const result = await db.collection(collectionName).insertOne(messageData);
+    return { ...messageData, _id: result.insertedId };
   },
-  { timestamps: true }
-);
 
-const Message = mongoose.model("Message", messageSchema);
-
-export default Message;
+  async find(query) {
+    const db = getDB();
+    return db.collection(collectionName).find(query).toArray();
+  }
+};

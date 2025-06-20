@@ -1,5 +1,5 @@
 import { generateToken } from "../lib/utils.js";
-import User from "../models/user.model.js";
+import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
 
@@ -21,26 +21,23 @@ export const signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({
+    const newUser = {
       fullName,
       email,
       password: hashedPassword,
+      profilePic: ""
+    };
+
+    const createdUser = await User.create(newUser);
+
+    generateToken(createdUser._id, res);
+
+    res.status(201).json({
+      _id: createdUser._id,
+      fullName: createdUser.fullName,
+      email: createdUser.email,
+      profilePic: createdUser.profilePic,
     });
-
-    if (newUser) {
-      // generate jwt token here
-      generateToken(newUser._id, res);
-      await newUser.save();
-
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid user data" });
-    }
   } catch (error) {
     console.log("Error in signup controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -84,6 +81,7 @@ export const logout = (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 export const updateProfile = async (req, res) => {
   try {
     const { profilePic } = req.body;
@@ -102,13 +100,14 @@ export const updateProfile = async (req, res) => {
       imageUrl = uploadResponse.secure_url;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { profilePic: imageUrl },
-      { new: true }
+    const updatedUser = await User.update(
+      { _id: userId },
+      { profilePic: imageUrl }
     );
 
-    res.status(200).json(updatedUser);
+    // Fetch the updated user
+    const user = await User.findById(userId);
+    res.status(200).json(user);
   } catch (error) {
     console.log("error in update profile:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -117,7 +116,9 @@ export const updateProfile = async (req, res) => {
 
 export const checkAuth = (req, res) => {
   try {
-    res.status(200).json(req.user);
+    // Remove password from user object
+    const { password, ...userWithoutPassword } = req.user;
+    res.status(200).json(userWithoutPassword);
   } catch (error) {
     console.log("Error in checkAuth controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });

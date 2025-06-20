@@ -3,13 +3,7 @@
   "builds": [
     {
       "src": "src/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "node_modules/mongoose/**",
-          "src/preload-mongoose.js"
-        ]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [

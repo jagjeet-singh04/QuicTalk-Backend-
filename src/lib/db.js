@@ -1,32 +1,40 @@
-import mongoose from 'mongoose';
+import { MongoClient } from 'mongodb';
 
-// Fallback in case modules didn't load
-if (!mongoose.ConnectionStates) {
-  console.warn('Mongoose ConnectionStates not found! Creating fallback');
-  mongoose.ConnectionStates = {
-    disconnected: 0,
-    connected: 1,
-    connecting: 2,
-    disconnecting: 3
-  };
-}
+let client;
+let db;
 
 export const connectDB = async () => {
   try {
-    console.log('Connecting to MongoDB...');
+    console.log('Connecting to MongoDB with native driver...');
     
-    // Check if native driver is available
-    if (!mongoose.mongo) {
-      console.error('Mongoose MongoDB driver missing!');
-      throw new Error('MongoDB driver not loaded');
-    }
-    
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    // Create a new client
+    client = new MongoClient(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
     });
-    console.log(`MongoDB Connected successfully at ${conn.connection.host}`);
+    
+    // Connect to the database
+    await client.connect();
+    
+    // Select the database
+    db = client.db();
+    
+    console.log('✅ MongoDB Connected successfully with native driver');
   } catch (err) {
-    console.error("MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
+  }
+};
+
+export const getDB = () => {
+  if (!db) {
+    throw new Error('Database not connected! Call connectDB first.');
+  }
+  return db;
+};
+
+export const closeDB = async () => {
+  if (client) {
+    await client.close();
+    console.log('MongoDB connection closed');
   }
 };

@@ -1,7 +1,3 @@
-// Add at the VERY TOP
-import '../preload-mongoose.js';
-
-
 import express from 'express';
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -90,26 +86,6 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   });
-});
-
-// Add after other routes
-app.get('/verify-modules', (req, res) => {
-  const moduleStatus = {
-    mongoose: {
-      version: mongoose?.version || 'Not loaded',
-      ConnectionStates: !!mongoose?.ConnectionStates,
-      mongo: !!mongoose?.mongo
-    },
-    paths: {}
-  };
-
-  try {
-    moduleStatus.paths.connectionstate = require.resolve('mongoose/lib/connectionstate');
-  } catch (e) {
-    moduleStatus.paths.connectionstate = e.message;
-  }
-
-  res.status(200).json(moduleStatus);
 });
 
 // Start server
