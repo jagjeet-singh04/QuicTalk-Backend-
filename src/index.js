@@ -1,6 +1,12 @@
-// Force include debug module for Express
+// PRELOAD MODULES FOR SERVERLESS ENVIRONMENT
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
+
+// Preload critical modules for Express compatibility
+require('iconv-lite');
+require('iconv-lite/extend-node');
+require('raw-body');
+require('body-parser');
 require('debug');
 
 // WORKAROUND FOR EXPRESS ROUTER ISSUE
@@ -20,6 +26,7 @@ express.application.lazyrouter = function() {
   return this;
 };
 
+// Import other modules
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
