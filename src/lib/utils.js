@@ -8,8 +8,11 @@ export const generateToken = (userId, res) => {
   res.cookie("jwt", token, {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    sameSite: "none", // Changed to none for cross-site
-    secure: process.env.NODE_ENV === "production" // Only secure in production
+    sameSite: "none",
+    secure: true, // Must be true for cross-site cookies
+    domain: process.env.NODE_ENV === "production" 
+      ? "quictalk-backend-production.up.railway.app"
+      : "localhost"
   });
   
   return token;
