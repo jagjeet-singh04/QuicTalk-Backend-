@@ -16,8 +16,9 @@ const __dirname = path.resolve();
 
 // Configure allowed origins
 const allowedOrigins = [
-  "http://localhost:5173", // Local development
-  "https://quick-talk-ten.vercel.app" // Your production frontend
+  "http://localhost:5173",
+  "https://quick-talk-ten.vercel.app",
+  "https://quic-talk-backend.vercel.app" // Add your backend domain too
 ];
 
 app.use(express.json({ limit: "10mb" }));

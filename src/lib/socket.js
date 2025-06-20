@@ -6,18 +6,21 @@ const app = express();
 const server = http.createServer(app);
 
 // Allowed origins for Socket.IO
+// In lib/socket.js
 const allowedOrigins = [
-  "http://localhost:5173", // Local development
-  "https://quick-talk-ten.vercel.app" // Production frontend
+  "http://localhost:5173",
+  "https://quick-talk-ten.vercel.app",
+  "https://quic-talk-backend.vercel.app"
 ];
 
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
-    credentials: true // Important for authentication cookies
+    credentials: true
   }
 });
+
 
 export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
