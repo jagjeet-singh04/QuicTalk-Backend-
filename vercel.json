@@ -6,7 +6,7 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "node_modules/mongoose/lib/**/*.js",
+          "node_modules/mongoose/**",
           "src/preload-mongoose.js"
         ]
       }

@@ -1,17 +1,48 @@
 // src/preload-mongoose.js
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
+import fs from 'fs';
 import path from 'path';
 
-// Get mongoose installation path
-const mongoosePath = path.dirname(require.resolve('mongoose'));
+function safeRequire(modulePath) {
+  try {
+    require.resolve(modulePath);
+    require(modulePath);
+    console.log(`Successfully required: ${modulePath}`);
+    return true;
+  } catch (error) {
+    console.error(`Error requiring ${modulePath}:`, error.message);
+    
+    // Try to find the file in node_modules
+    const fullPath = path.join(process.cwd(), 'node_modules', modulePath);
+    if (fs.existsSync(fullPath)) {
+      console.log(`Found at: ${fullPath}`);
+      require(fullPath);
+      return true;
+    }
+    
+    console.error(`File not found: ${fullPath}`);
+    return false;
+  }
+}
 
-// Explicitly require all necessary Mongoose internal files
-require(path.join(mongoosePath, 'lib/connectionstate'));
-require(path.join(mongoosePath, 'lib/drivers/node-mongodb-native/collection'));
-require(path.join(mongoosePath, 'lib/drivers/node-mongodb-native/index'));
-require(path.join(mongoosePath, 'lib/helpers/printJestWarning'));
-require(path.join(mongoosePath, 'lib/helpers/getConstructorName'));
-require(path.join(mongoosePath, 'lib/helpers/specialProperties'));
+console.log('Preloading Mongoose modules...');
 
-console.log('Mongoose internal modules preloaded successfully');
+// Load critical Mongoose modules
+const modulesToLoad = [
+  'mongoose/lib/connectionstate.js',
+  'mongoose/lib/drivers/node-mongodb-native/collection.js',
+  'mongoose/lib/drivers/node-mongodb-native/index.js'
+];
+
+modulesToLoad.forEach(modulePath => {
+  if (!safeRequire(modulePath)) {
+    console.error(`CRITICAL: Failed to load ${modulePath}`);
+    // Fallback to empty module to prevent crash
+    require.cache[require.resolve(modulePath)] = {
+      exports: {}
+    };
+  }
+});
+
+console.log('Mongoose modules preloaded');

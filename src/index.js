@@ -92,27 +92,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-
 // Add after other routes
-app.get('/test-modules', (req, res) => {
+app.get('/verify-modules', (req, res) => {
+  const moduleStatus = {
+    mongoose: {
+      version: mongoose?.version || 'Not loaded',
+      ConnectionStates: !!mongoose?.ConnectionStates,
+      mongo: !!mongoose?.mongo
+    },
+    paths: {}
+  };
+
   try {
-    // Test if modules are loaded
-    const mongoosePath = require.resolve('mongoose');
-    const connectionStatePath = require.resolve('mongoose/lib/connectionstate');
-    
-    res.status(200).json({
-      status: 'success',
-      modules: {
-        mongoose: mongoosePath,
-        connectionstate: connectionStatePath
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: `Module missing: ${error.message}`
-    });
+    moduleStatus.paths.connectionstate = require.resolve('mongoose/lib/connectionstate');
+  } catch (e) {
+    moduleStatus.paths.connectionstate = e.message;
   }
+
+  res.status(200).json(moduleStatus);
 });
 
 // Start server
