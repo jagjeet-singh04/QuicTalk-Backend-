@@ -8,7 +8,7 @@
   "routes": [
     {
       "src": "/favicon.ico",
-      "dest": "/src/public/favicon.ico"
+      "dest": "/src/public/favicon-icon.ico"  
     },
     {
       "src": "/(.*)",

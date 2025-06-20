@@ -60,7 +60,10 @@ app.use("/api/messages", messageRoutes);
 
 // Health check endpoint
 // Add this after your routes
-app.get('/favicon.ico', (req, res) => res.status(204).end());
+// Add this before your API routes
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
+});
 
 app.get('/health', (req, res) => {
   res.status(200).json({ 
