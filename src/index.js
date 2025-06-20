@@ -1,3 +1,14 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+// Preload all critical Mongoose modules
+require('mongoose/lib/connectionstate');
+require('mongoose/lib/drivers/node-mongodb-native/collection');
+require('mongoose/lib/drivers/node-mongodb-native/index');
+require('mongoose/lib/helpers/printJestWarning');
+require('mongoose/lib/helpers/getConstructorName');
+require('mongoose/lib/helpers/specialProperties');
+
 import express from 'express';
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
