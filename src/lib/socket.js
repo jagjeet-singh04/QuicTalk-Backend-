@@ -6,9 +6,9 @@ import cors from "cors";
 const app = express();
 const server = http.createServer(app);
 
-// Configure allowed origins from environment
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',')
+// ✅ Allowed origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
   : [
       "http://localhost:5173",
       "http://localhost:3000",
@@ -16,26 +16,17 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "https://quictalk-backend-production.up.railway.app"
     ];
 
-// Add this pattern matching function
+// ✅ Origin validator
 const isOriginAllowed = (origin) => {
-  if (!origin) return true; // Allow no-origin requests
-  
-  // Allow all in development
+  if (!origin) return true;
   if (process.env.NODE_ENV === "development") return true;
-  
-  // Check exact matches
   if (allowedOrigins.includes(origin)) return true;
-  
-  // Allow all Vercel preview deployments
-  if (origin.endsWith('.vercel.app')) return true;
-  
-  // Allow localhost with any port
+  if (origin.endsWith(".vercel.app")) return true;
   if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
-  
   return false;
 };
 
-// Apply CORS middleware to Express app
+// ✅ CORS for Express
 app.use(cors({
   origin: (origin, callback) => {
     if (isOriginAllowed(origin)) {
@@ -49,7 +40,7 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
 
-// Socket.IO configuration
+// ✅ Initialize Socket.IO
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
@@ -64,48 +55,50 @@ const io = new Server(server, {
     credentials: true
   },
   connectionStateRecovery: {
-    maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes
+    maxDisconnectionDuration: 2 * 60 * 1000,
     skipMiddlewares: true
   }
 });
 
-// Track online users
-const userSocketMap = {}; // {userId: socketId}
+// 🔍 Track online users
+const userSocketMap = {}; // { userId: socketId }
 
-// Utility function to get socket ID
 export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
+// 🔄 Connection logic
 io.on("connection", (socket) => {
-  console.log("New connection:", socket.id);
-
-  // Handle authentication
   const userId = socket.handshake.query.userId;
+
+  console.log("🟢 New connection:", socket.id);
+  console.log(`📊 Active connections: ${io.engine.clientsCount}`);
+
   if (userId && typeof userId === "string") {
     userSocketMap[userId] = socket.id;
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   }
 
-  // Handle disconnection
+  // ❌ Handle disconnect
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    console.log("🔴 Disconnected:", socket.id);
     if (userId && typeof userId === "string") {
       delete userSocketMap[userId];
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
     }
+    console.log(`📉 Active connections after disconnect: ${io.engine.clientsCount}`);
   });
 
-  // Error handling
+  // ⚠️ Socket-level error handling
   socket.on("error", (err) => {
-    console.error("Socket error:", err);
+    console.error("❗Socket error:", err.message || err);
   });
 });
 
-// Enhanced ping/pong for connection health
+// 🔁 Raw connection for deep engine tracking
 io.engine.on("connection", (rawSocket) => {
   rawSocket.on("close", (reason) => {
-    console.log("Connection closed:", reason);
+    console.log("⚡ Engine closed connection:", reason);
   });
 });
 

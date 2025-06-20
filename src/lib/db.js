@@ -2,25 +2,24 @@ import { MongoClient } from 'mongodb';
 
 let client;
 let db;
-
 export const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    
-    // Use new connection syntax
     client = new MongoClient(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
-      minPoolSize: 5,
-      maxPoolSize: 10,
+      useNewUrlParser: true,
+      useUnifiedTopology: true
     });
     
     await client.connect();
     
-    // Extract database name from connection string
     const dbName = process.env.MONGODB_URI.split('/').pop().split('?')[0];
     db = client.db(dbName);
     
     console.log(`✅ MongoDB Connected to database: ${dbName}`);
+    
+    // Test the connection
+    await db.command({ ping: 1 });
+    console.log("Database ping successful");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);

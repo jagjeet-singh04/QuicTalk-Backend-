@@ -17,26 +17,24 @@ export const getUsersForSidebar = async (req, res) => {
     console.error("Error in getUsersForSidebar: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
-};
-export const getMessages = async (req, res) => {
+};export const getMessages = async (req, res) => {
   try {
     const { userId: userToChatId } = req.params;
     const myId = req.user._id;
 
-    // Validate IDs
-    if (!ObjectId.isValid(myId)) {
-      return res.status(400).json({ error: "Invalid sender ID" });
-    }
-    if (!ObjectId.isValid(userToChatId)) {
-      return res.status(400).json({ error: "Invalid receiver ID" });
-    }
-
+    // Use the find method correctly
     const messages = await Message.find({
       $or: [
-        { senderId: new ObjectId(myId), receiverId: new ObjectId(userToChatId) },
-        { senderId: new ObjectId(userToChatId), receiverId: new ObjectId(myId) }
+        { 
+          senderId: new ObjectId(myId), 
+          receiverId: new ObjectId(userToChatId) 
+        },
+        { 
+          senderId: new ObjectId(userToChatId), 
+          receiverId: new ObjectId(myId) 
+        }
       ]
-    }).sort({ createdAt: 1 });
+    });
 
     res.status(200).json(messages);
   } catch (error) {
