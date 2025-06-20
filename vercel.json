@@ -13,6 +13,11 @@
       "methods": ["GET"]
     },
     {
+      "src": "/favicon.png",
+      "dest": "/src/public/favicon-icon.ico",
+      "methods": ["GET"]
+    },
+    {
       "src": "/api/(.*)",
       "dest": "src/index.js",
       "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]

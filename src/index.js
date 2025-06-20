@@ -1,4 +1,7 @@
 import express from "express";
+const router = express.Router();
+// This line fixes the missing './router' module error
+express.application.router = router;
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -8,6 +11,7 @@ import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
+
 
 dotenv.config();
 
@@ -61,6 +65,9 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
 });
 
+app.get('/favicon.png', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon-icon.ico'));
+});
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
