@@ -57,6 +57,9 @@ if (process.env.NODE_ENV === "production") {
     }
     next();
   });
+} else {
+  // Disable HTTPS redirection in development
+  console.log("⚠️ HTTPS redirection disabled in development");
 }
 
 // Serve static files (including favicon)

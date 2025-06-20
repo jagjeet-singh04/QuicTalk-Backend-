@@ -5,25 +5,29 @@ let db;
 
 export const connectDB = async () => {
   try {
-    console.log('Connecting to MongoDB with native driver...');
+    console.log('Connecting to MongoDB...');
     
-    // Create a new client
+    // Use new connection syntax
     client = new MongoClient(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
+      minPoolSize: 5,
+      maxPoolSize: 10,
     });
     
-    // Connect to the database
     await client.connect();
     
-    // Select the database
-    db = client.db();
+    // Extract database name from connection string
+    const dbName = process.env.MONGODB_URI.split('/').pop().split('?')[0];
+    db = client.db(dbName);
     
-    console.log('✅ MongoDB Connected successfully with native driver');
+    console.log(`✅ MongoDB Connected to database: ${dbName}`);
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   }
 };
+
+// ... rest of the file
 
 export const getDB = () => {
   if (!db) {

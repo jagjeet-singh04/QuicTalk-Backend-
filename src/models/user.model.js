@@ -2,10 +2,14 @@ import { getDB } from "../lib/db.js";
 
 const collectionName = "users";
 
+import { ObjectId } from 'mongodb';
+
 export const User = {
-  async findOne(query) {
+  async findById(id) {
     const db = getDB();
-    return db.collection(collectionName).findOne(query);
+    return db.collection("users").findOne({ 
+      _id: new ObjectId(id) // Convert to ObjectId
+    });
   },
 
   async create(userData) {
