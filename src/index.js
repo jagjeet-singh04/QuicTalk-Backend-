@@ -1,3 +1,9 @@
+// Add this at the very top
+if (process.env.VERCEL_ENV === 'preview' || process.env.VERCEL_ENV === 'development') {
+  console.log('Skipping server start in Vercel build environment');
+  process.exit(0);
+}
+
 // ULTIMATE MODULE PRELOAD SOLUTION
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);

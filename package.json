@@ -4,10 +4,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "ssl-renew": "node ssl-renew.js",
-    "vercel-build": "node src/index.js"
+  "start": "node src/index.js",
+  "dev": "nodemon src/index.js",
+  "ssl-renew": "node ssl-renew.js",
+  "build": "echo 'Building project'",
+  "vercel-build": "npm run build"
   },
   "keywords": [],
   "author": "",
