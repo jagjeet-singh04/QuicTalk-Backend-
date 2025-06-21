@@ -52,8 +52,23 @@ export const getMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
-    const { id: receiverId } = req.params;
+    const receiverId = req.params.receiverId;
     const senderId = req.user._id;
+
+    // Add this debug log
+    console.log("Received message data:", {
+      senderId,
+      receiverId,
+      text,
+      image: image ? "image present" : "no image"
+    });
+
+    // Add validation
+    if (!receiverId) {
+      return res.status(400).json({ error: "Receiver ID is required" });
+    }
+
+    console.log(`✉️ Sending message from ${senderId} to ${receiverId}`);
 
     let imageUrl = null;
     if (image) {
