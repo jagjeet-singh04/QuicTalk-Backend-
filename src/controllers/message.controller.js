@@ -1,27 +1,38 @@
 import { ObjectId } from 'mongodb';
+
 import { Message } from "../models/message.model.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
 import cloudinary from "../lib/cloudinary.js";
 
+import { User } from "../models/user.model.js";
+
+// Remove other getUsersForSidebar implementations
+// Add this clean implementation:
 
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
     
-    // Get database instance
-    const db = getDB();
-    
-    // Find users excluding the logged-in user
-    const users = await db.collection("users").find(
-      { _id: { $ne: new ObjectId(loggedInUserId) } }
-    ).project({ password: 0 }).toArray();
+    // Use User model to find users
+    const users = await User.find(
+      { _id: { $ne: loggedInUserId } },
+      { password: 0 } // Exclude password field
+    );
 
-    res.status(200).json(users);
+    // Format users with string IDs
+    const formattedUsers = users.map(user => ({
+      ...user,
+      _id: user._id.toString()
+    }));
+
+    res.status(200).json(formattedUsers);
   } catch (error) {
     console.error("Error in getUsersForSidebar: ", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
 
 export const getMessages = async (req, res) => {
   try {

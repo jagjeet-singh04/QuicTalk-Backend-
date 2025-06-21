@@ -4,14 +4,12 @@ import {
   getMessages, 
   getUsersForSidebar, 
   sendMessage 
-} from "../controllers/message.controller.js";
+} from "../controllers/message.controller.js"; // Ensure consistent casing
 
 const router = express.Router();
 
-// Fixed routes with proper parameter names
-// Ensure routes have proper parameter names:
-// message.route.js
-router.get("/conversation/:userId", protectRoute, getMessages); // Keep this as-is
+router.get("/conversation/:userId", protectRoute, getMessages);
 router.get("/users", protectRoute, getUsersForSidebar);
 router.post("/send/:receiverId", protectRoute, sendMessage);
+
 export default router;

@@ -5,13 +5,32 @@ import { ObjectId } from "mongodb";
 const collectionName = "messages";
 
 // 🧹 Helper: Format message for frontend readability
-const formatMessage = (message) => ({
-  ...message,
-  _id: message._id?.toString?.() ?? message._id,
-  senderId: message.senderId?.toString?.() ?? message.senderId,
-  receiverId: message.receiverId?.toString?.() ?? message.receiverId,
-  createdAt: new Date(message.createdAt).toISOString(),
-});
+// 🧹 Helper: Format message for frontend readability
+const formatMessage = (message) => {
+  // Convert to plain JavaScript object
+  const formatted = { ...message };
+  
+  // Convert ObjectIDs to strings
+  if (formatted._id && typeof formatted._id !== 'string') {
+    formatted._id = formatted._id.toString();
+  }
+  if (formatted.senderId && typeof formatted.senderId !== 'string') {
+    formatted.senderId = formatted.senderId.toString();
+  }
+  if (formatted.receiverId && typeof formatted.receiverId !== 'string') {
+    formatted.receiverId = formatted.receiverId.toString();
+  }
+  
+  // Format date
+  if (formatted.createdAt instanceof Date) {
+    formatted.createdAt = formatted.createdAt.toISOString();
+  } else if (typeof formatted.createdAt === 'string') {
+    // Ensure ISO format
+    formatted.createdAt = new Date(formatted.createdAt).toISOString();
+  }
+  
+  return formatted;
+};
 
 export const Message = {
   // 📥 Create a new message
