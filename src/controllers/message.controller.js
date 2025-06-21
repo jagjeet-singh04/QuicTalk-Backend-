@@ -72,20 +72,29 @@ export const sendMessage = async (req, res) => {
 
     // Save to database
     const createdMessage = await Message.create(newMessage);
+
+// Format before emitting
+  const formattedMessage = {
+  ...createdMessage,
+  _id: createdMessage._id.toString(),
+  senderId: createdMessage.senderId.toString(),
+  receiverId: createdMessage.receiverId.toString()
+  };
+
     
-    // Emit to receiver
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", createdMessage);
-    }
+   // Emit to receiver
+const receiverSocketId = getReceiverSocketId(receiverId);
+if (receiverSocketId) {
+  io.to(receiverSocketId).emit("newMessage", formattedMessage);
+}
 
-    // Also send to sender in real-time
-    const senderSocketId = getReceiverSocketId(senderId);
-    if (senderSocketId && senderSocketId !== receiverSocketId) {
-      io.to(senderSocketId).emit("newMessage", createdMessage);
-    }
+// Also send to sender
+const senderSocketId = getReceiverSocketId(senderId);
+if (senderSocketId && senderSocketId !== receiverSocketId) {
+  io.to(senderSocketId).emit("newMessage", formattedMessage);
+}
 
-    res.status(201).json(createdMessage);
+res.status(201).json(formattedMessage);
   } catch (error) {
     console.error("Error in sendMessage controller: ", error);
     res.status(500).json({ error: "Internal server error" });
