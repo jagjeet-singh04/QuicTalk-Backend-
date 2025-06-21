@@ -81,20 +81,25 @@ export const sendMessage = async (req, res) => {
   receiverId: createdMessage.receiverId.toString()
   };
 
+   console.log(`✉️ Sending message from ${senderId} to ${receiverId}`);
+    console.log(`🔍 Receiver socket: ${getReceiverSocketId(receiverId)}`);
+    console.log(`🔍 Sender socket: ${getReceiverSocketId(senderId)}`);
+
     
-   // Emit to receiver
-const receiverSocketId = getReceiverSocketId(receiverId);
-if (receiverSocketId) {
-  io.to(receiverSocketId).emit("newMessage", formattedMessage);
-}
+   const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      console.log(`📤 Emitting to receiver: ${receiverSocketId}`);
+      io.to(receiverSocketId).emit("newMessage", formattedMessage);
+    }
 
-// Also send to sender
-const senderSocketId = getReceiverSocketId(senderId);
-if (senderSocketId && senderSocketId !== receiverSocketId) {
-  io.to(senderSocketId).emit("newMessage", formattedMessage);
-}
+    // Also send to sender in real-time
+    const senderSocketId = getReceiverSocketId(senderId);
+    if (senderSocketId && senderSocketId !== receiverSocketId) {
+      console.log(`📤 Emitting to sender: ${senderSocketId}`);
+      io.to(senderSocketId).emit("newMessage", formattedMessage);
+    }
 
-res.status(201).json(formattedMessage);
+    res.status(201).json(formattedMessage);
   } catch (error) {
     console.error("Error in sendMessage controller: ", error);
     res.status(500).json({ error: "Internal server error" });

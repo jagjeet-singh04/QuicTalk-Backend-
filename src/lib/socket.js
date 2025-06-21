@@ -11,7 +11,10 @@ const userSocketMap = {}; // { userId: socketId }
 
 // Utility function to get socket ID
 export function getReceiverSocketId(userId) {
-  return userSocketMap[userId];
+  // Add debug logging
+  const socketId = userSocketMap[userId];
+  console.log(`🔍 Looking up socket for ${userId}: ${socketId || 'Not found'}`);
+  return socketId;
 }
 
 // Allowed Origins
@@ -85,6 +88,9 @@ io.on("connection", (socket) => {
     // Get all online users
     const onlineUsers = Object.keys(userSocketMap);
     io.emit("onlineUsersUpdate", onlineUsers);
+    
+    // Add debug log
+    console.log(`📡 User ${userId} connected with socket ${socket.id}`);
   }
 
   // Heartbeat from client
@@ -122,6 +128,12 @@ io.engine.on("connection", (rawSocket) => {
   rawSocket.on("close", (reason) => {
     console.log("⚡ Engine closed connection due to:", reason);
   });
+
+  
+
+
 });
+
+
 
 export { app, server, io };

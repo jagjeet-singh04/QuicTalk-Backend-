@@ -10,24 +10,10 @@ const formatMessage = (message) => {
   // Convert to plain JavaScript object
   const formatted = { ...message };
   
-  // Convert ObjectIDs to strings
-  if (formatted._id && typeof formatted._id !== 'string') {
-    formatted._id = formatted._id.toString();
-  }
-  if (formatted.senderId && typeof formatted.senderId !== 'string') {
-    formatted.senderId = formatted.senderId.toString();
-  }
-  if (formatted.receiverId && typeof formatted.receiverId !== 'string') {
-    formatted.receiverId = formatted.receiverId.toString();
-  }
-  
-  // Format date
-  if (formatted.createdAt instanceof Date) {
-    formatted.createdAt = formatted.createdAt.toISOString();
-  } else if (typeof formatted.createdAt === 'string') {
-    // Ensure ISO format
-    formatted.createdAt = new Date(formatted.createdAt).toISOString();
-  }
+  // Convert all ObjectIDs to strings
+  if (formatted._id) formatted._id = formatted._id.toString();
+  if (formatted.senderId) formatted.senderId = formatted.senderId.toString();
+  if (formatted.receiverId) formatted.receiverId = formatted.receiverId.toString();
   
   return formatted;
 };
@@ -66,21 +52,26 @@ export const Message = {
   },
 
   // 📜 Get all messages between two users (ordered by time)
-  async findMessages(senderId, receiverId) {
-    const db = getDB();
-    const messages = await db
-      .collection(collectionName)
-      .find({
-        $or: [
-          { senderId: new ObjectId(senderId), receiverId: new ObjectId(receiverId) },
-          { senderId: new ObjectId(receiverId), receiverId: new ObjectId(senderId) },
-        ],
-      })
-      .sort({ createdAt: 1 }) // chronological
-      .toArray();
+ async findMessages(senderId, receiverId) {
+  const db = getDB();
+  
+  // Convert string IDs to ObjectId
+  const senderObjId = new ObjectId(senderId);
+  const receiverObjId = new ObjectId(receiverId);
+  
+  const messages = await db
+    .collection(collectionName)
+    .find({
+      $or: [
+        { senderId: senderObjId, receiverId: receiverObjId },
+        { senderId: receiverObjId, receiverId: senderObjId },
+      ],
+    })
+    .sort({ createdAt: 1 }) // chronological
+    .toArray();
 
-    return messages.map(formatMessage);
-  },
+  return messages.map(formatMessage);
+},
 
   // ❌ Delete entire conversation between two users
   async deleteConversation(senderId, receiverId) {
