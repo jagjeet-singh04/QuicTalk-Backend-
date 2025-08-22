@@ -16,24 +16,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configure allowed origins
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : [
-      "https://quick-talk-ten.vercel.app",
-      "https://quic-talk-backend.vercel.app",
-      "http://localhost:5173",
-      "http://localhost:3000"
-    ];
+const allowedOrigins = [
+  "https://quick-talk-ten.vercel.app",
+  "https://quic-talk-backend.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000"
+];
 
 console.log("Allowed Origins:", allowedOrigins);
 
-// Enhanced CORS configuration
+// Simplified CORS configuration
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.warn(`⚠️ CORS blocked: ${origin}`);
@@ -43,39 +41,25 @@ const corsOptions = {
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  exposedHeaders: ["Content-Length", "X-Request-Id"]
 };
 
-// Apply middleware in correct order
+// Apply CORS middleware FIRST
 app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
+// Other middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// Explicitly handle preflight requests
-app.options('*', cors(corsOptions));
-
-// HTTPS redirection in production
-if (process.env.NODE_ENV === "production") {
-  app.use((req, res, next) => {
-    if (req.headers['x-forwarded-proto'] !== 'https') {
-      return res.redirect(`https://${req.headers.host}${req.url}`);
-    }
-    next();
-  });
-} else {
-  console.log("⚠️ HTTPS redirection disabled in development");
-}
-
+// Remove manual CORS headers from individual routes
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Health check endpoint
+// Health check endpoint - remove manual CORS headers
 app.get('/api/health', (req, res) => {
-  // Add CORS headers manually for this endpoint
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
   res.status(200).json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -83,11 +67,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Explicit root route
+// Root route - remove manual CORS headers
 app.get('/', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
   res.json({
     status: 'success',
     message: 'Backend server is running',
@@ -96,11 +77,8 @@ app.get('/', (req, res) => {
   });
 });
 
-// 404 handler
+// 404 handler - remove manual CORS headers
 app.get('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
   res.status(404).json({ 
     status: 'error',
     message: 'Endpoint not found',
@@ -108,15 +86,10 @@ app.get('*', (req, res) => {
   });
 });
 
-// Global error handler
+// Global error handler - remove manual CORS headers
 app.use((err, req, res, next) => {
-  // Add CORS headers to error responses
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
   console.error('⚠️ Server Error:', err.message);
   
-  // Handle CORS errors specifically
   if (err.message.includes("CORS")) {
     return res.status(403).json({
       status: 'error',
@@ -131,6 +104,12 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
@@ -139,12 +118,6 @@ server.listen(PORT, () => {
     console.error("Database connection failed:", err);
     process.exit(1);
   });
-});
-
-// In src/index.js
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
 });
 
 export default app;
